@@ -78,11 +78,25 @@ export default function Page() {
       }
     })
 
-    void createRoomForCharacter(character, mode)
+    void ensureBackendRoom(character, mode)
   }
 
-  async function createRoomForCharacter(character: Character, mode: BackendChatMode) {
+  async function ensureBackendRoom(character: Character, mode: BackendChatMode): Promise<string> {
     try {
+      setChats((prev) => {
+        const state = prev[character.id]
+        if (!state || state.roomId) return prev
+
+        return {
+          ...prev,
+          [character.id]: {
+            ...state,
+            isConnecting: true,
+            error: undefined,
+          },
+        }
+      })
+
       const room = await createBackendRoom({
         girlfriendId: character.backendGirlfriendId,
         mode,
@@ -102,6 +116,8 @@ export default function Page() {
           },
         }
       })
+
+      return room.roomId
     } catch (error) {
       setChats((prev) => {
         const state = prev[character.id]
@@ -116,6 +132,7 @@ export default function Page() {
           },
         }
       })
+      throw error
     }
   }
 
@@ -124,7 +141,7 @@ export default function Page() {
     const id = selectedCharacter.id
     const state = chats[id]
 
-    if (!state?.roomId || state.isConnecting || state.isSending) {
+    if (!state || state.isConnecting || state.isSending) {
       setChats((prev) => {
         const current = prev[id]
         if (!current) return prev
@@ -137,6 +154,15 @@ export default function Page() {
         }
       })
       return
+    }
+
+    let roomId = state.roomId
+    if (!roomId) {
+      try {
+        roomId = await ensureBackendRoom(selectedCharacter, state.mode)
+      } catch {
+        return
+      }
     }
 
     const userTime = state.mode === "FAST" ? state.virtualTime : Date.now()
@@ -166,7 +192,7 @@ export default function Page() {
 
     try {
       const result = await sendBackendMessage({
-        roomId: state.roomId,
+        roomId,
         content: text,
         mode: state.mode,
       })
