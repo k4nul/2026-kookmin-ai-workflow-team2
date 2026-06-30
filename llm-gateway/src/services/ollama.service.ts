@@ -77,7 +77,7 @@ export async function preloadModel(input: {
   timeoutMs?: number;
 } = {}): Promise<OllamaChatResponse> {
   return callOllamaChat({
-    model: input.model ?? env.OLLAMA_MODEL,
+    model: input.model ?? env.LLM_MODEL,
     messages: [{ role: "user", content: "" }],
     keepAlive: input.keepAlive ?? env.OLLAMA_KEEP_ALIVE,
     timeoutMs: input.timeoutMs

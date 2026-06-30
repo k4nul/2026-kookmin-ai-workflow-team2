@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { env } from "../config/env.js";
 import { getDailyFeedbackFallback } from "../services/fallback.service.js";
-import { callOllamaChat } from "../services/ollama.service.js";
+import { callLlmChat } from "../services/llm.service.js";
 import { buildDailyFeedbackMessages } from "../services/prompt-template.service.js";
 import {
   containsInternalLeak,
@@ -22,17 +22,17 @@ export const feedbackRouter = Router();
 feedbackRouter.post("/daily", async (req, res) => {
   const request = dailyFeedbackRequestSchema.parse(req.body);
   const requestId = ensureRequestId(request.requestId);
-  const model = request.model ?? env.OLLAMA_MODEL;
+  const model = request.model ?? env.LLM_MODEL;
   const startedAt = nowMs();
   const messages = buildDailyFeedbackMessages(request);
 
   try {
-    const ollamaResponse = await callOllamaChat({
+    const llmResponse = await callLlmChat({
       model,
       messages,
       options: defaultDailyFeedbackOptions
     });
-    const content = sanitizeLlmOutput(ollamaResponse.message?.content ?? "");
+    const content = sanitizeLlmOutput(llmResponse.content);
     const shouldFallback = !content || containsInternalLeak(content);
     const latencyMs = elapsedMs(startedAt);
 

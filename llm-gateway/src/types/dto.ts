@@ -77,9 +77,12 @@ export type IntentClassifyResponse = {
   error?: string;
 };
 
-export type DailyFeedbackRequest = {
+type DailyFeedbackBaseRequest = {
   requestId?: string;
   model?: string;
+};
+
+export type DailyFeedbackSummaryRequest = DailyFeedbackBaseRequest & {
   girlfriend: {
     id: string;
     displayName: string;
@@ -94,6 +97,18 @@ export type DailyFeedbackRequest = {
     goodBehaviors?: string[];
   };
 };
+
+export type DailyFeedbackTranscriptRequest = DailyFeedbackBaseRequest & {
+  roomId: string;
+  messages: Array<{
+    sender: string;
+    content: string;
+    type?: string;
+    createdAt?: string;
+  }>;
+};
+
+export type DailyFeedbackRequest = DailyFeedbackSummaryRequest | DailyFeedbackTranscriptRequest;
 
 export type DailyFeedbackResponse = {
   requestId: string;

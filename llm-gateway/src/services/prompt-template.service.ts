@@ -52,6 +52,30 @@ export function buildIntentClassificationMessages(
 }
 
 export function buildDailyFeedbackMessages(request: DailyFeedbackRequest): ChatMessage[] {
+  const userContent =
+    "summary" in request
+      ? [
+          `girlfriend: ${request.girlfriend.displayName} (${request.girlfriend.id}, ${request.girlfriend.personaType})`,
+          `day: ${request.day}`,
+          `successfulEvents: ${JSON.stringify(request.summary.successfulEvents ?? [])}`,
+          `failedEvents: ${JSON.stringify(request.summary.failedEvents ?? [])}`,
+          `timingMistakes: ${JSON.stringify(request.summary.timingMistakes ?? [])}`,
+          `contentMistakes: ${JSON.stringify(request.summary.contentMistakes ?? [])}`,
+          `goodBehaviors: ${JSON.stringify(request.summary.goodBehaviors ?? [])}`
+        ].join("\n")
+      : [
+          `roomId: ${request.roomId}`,
+          "recentMessages:",
+          ...request.messages.map((message) =>
+            [
+              `sender: ${message.sender}`,
+              `type: ${message.type ?? ""}`,
+              `createdAt: ${message.createdAt ?? ""}`,
+              `content: ${message.content}`
+            ].join(" | ")
+          )
+        ].join("\n");
+
   return [
     {
       role: "system",
@@ -67,15 +91,7 @@ export function buildDailyFeedbackMessages(request: DailyFeedbackRequest): ChatM
     },
     {
       role: "user",
-      content: [
-        `girlfriend: ${request.girlfriend.displayName} (${request.girlfriend.id}, ${request.girlfriend.personaType})`,
-        `day: ${request.day}`,
-        `successfulEvents: ${JSON.stringify(request.summary.successfulEvents ?? [])}`,
-        `failedEvents: ${JSON.stringify(request.summary.failedEvents ?? [])}`,
-        `timingMistakes: ${JSON.stringify(request.summary.timingMistakes ?? [])}`,
-        `contentMistakes: ${JSON.stringify(request.summary.contentMistakes ?? [])}`,
-        `goodBehaviors: ${JSON.stringify(request.summary.goodBehaviors ?? [])}`
-      ].join("\n")
+      content: userContent
     }
   ];
 }
