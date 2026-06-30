@@ -171,7 +171,7 @@ export function IntroScreen({ onStart }: Props) {
               ? "오프닝 종료"
               : "다음 장면 보기"
         }
-        className="absolute inset-0 z-10 cursor-pointer bg-transparent focus-visible:outline-4 focus-visible:-outline-offset-8 focus-visible:outline-primary"
+        className="absolute inset-0 z-30 cursor-pointer bg-transparent focus-visible:outline-4 focus-visible:-outline-offset-8 focus-visible:outline-primary"
       />
       <Image
         src={scene.image}
@@ -193,7 +193,7 @@ export function IntroScreen({ onStart }: Props) {
       >
         스킵하기
       </button>
-      <div className="absolute inset-x-4 bottom-6 z-30 mx-auto max-w-3xl rounded-3xl border border-card/60 bg-card/90 px-5 pb-5 pt-8 shadow-2xl backdrop-blur-md md:bottom-10 md:px-8 md:pb-7 md:pt-10">
+      <div className="pointer-events-none absolute inset-x-4 bottom-6 z-30 mx-auto max-w-3xl rounded-3xl border border-card/60 bg-card/90 px-5 pb-5 pt-8 shadow-2xl backdrop-blur-md md:bottom-10 md:px-8 md:pb-7 md:pt-10">
         <div className="absolute -top-5 left-5 rounded-full bg-primary px-5 py-2 text-sm font-black text-primary-foreground shadow-lg md:left-8">
           {scene.speaker}
         </div>
