@@ -401,6 +401,6 @@ AI 응답은 두 단계로 나눕니다.
 * **한솔 (`pahaha404`) - UI/UX Designer**
   * 미소녀 연애 시뮬레이션 인터페이스 상세 디자인
   * 게임 무드에 맞춘 캐릭터 셋 및 반투명(Glassmorphism) 테마 컬러 셋 정립
-* **현구 (`k4nul`) - Backend & AI Engineer**
+* **현구 `k4nul` - Backend & AI Engineer**
   * 캐릭터별 페르소나 주입을 위한 AI 프롬프트 엔지니어링 및 API 서버 구축
   * 시간 제어 코어 엔진(데모 모드/실제 모드) 알고리즘 및 실시간 이벤트 로직 구현
