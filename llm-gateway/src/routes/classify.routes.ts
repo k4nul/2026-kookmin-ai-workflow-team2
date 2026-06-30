@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { env } from "../config/env.js";
 import { getIntentFallback } from "../services/fallback.service.js";
-import { callOllamaChat } from "../services/ollama.service.js";
+import { callLlmChat, resolveLlmModel } from "../services/llm-provider.service.js";
 import { buildIntentClassificationMessages } from "../services/prompt-template.service.js";
 import { extractJsonObject, sanitizeLlmOutput } from "../services/response-filter.service.js";
 import {
   getAllowedIntents,
   intentClassifyRequestSchema,
-  parseIntentClassificationOutput
+  parseIntentClassificationOutput,
+  type IntentClassifyRequestInput
 } from "../services/schema.service.js";
 import { ensureRequestId } from "../utils/request-id.js";
 
@@ -19,21 +19,28 @@ const defaultIntentOptions = {
 
 export const classifyRouter = Router();
 
-classifyRouter.post("/intent", async (req, res) => {
-  const request = intentClassifyRequestSchema.parse(req.body);
+classifyRouter.post("/intent", async (req, res, next) => {
+  let request: IntentClassifyRequestInput;
+  try {
+    request = intentClassifyRequestSchema.parse(req.body);
+  } catch (error) {
+    next(error);
+    return;
+  }
+
   const requestId = ensureRequestId(request.requestId);
-  const model = request.model ?? env.OLLAMA_MODEL;
+  const model = resolveLlmModel(request.model);
   const allowedIntents = getAllowedIntents(request.allowedIntents);
   const messages = buildIntentClassificationMessages(request, allowedIntents);
 
   try {
-    const ollamaResponse = await callOllamaChat({
+    const llmResponse = await callLlmChat({
       model,
       messages,
       options: defaultIntentOptions,
       format: "json"
     });
-    const rawContent = sanitizeLlmOutput(ollamaResponse.message?.content ?? "");
+    const rawContent = sanitizeLlmOutput(llmResponse.message?.content ?? "");
     const parsedJson = extractJsonObject(rawContent);
     const classification = parseIntentClassificationOutput(parsedJson, allowedIntents);
 
