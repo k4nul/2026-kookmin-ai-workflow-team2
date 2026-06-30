@@ -13,6 +13,5 @@ coverage/
 
 # AI agent instructions and prompts
 AGENTS.md
-AGETNS.md
 *.instructions.json
 *.codex.json
