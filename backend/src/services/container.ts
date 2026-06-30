@@ -6,6 +6,7 @@ import { MessageRepository } from "../db/repositories/message.repository.js";
 import { PendingJobRepository } from "../db/repositories/pending-job.repository.js";
 import { RoomRepository } from "../db/repositories/room.repository.js";
 import { ScoreRepository } from "../db/repositories/score.repository.js";
+import { SensitiveTopicRepository } from "../db/repositories/sensitive-topic.repository.js";
 import { TimingRepository } from "../db/repositories/timing.repository.js";
 import { ViolationRepository } from "../db/repositories/violation.repository.js";
 import { ChatService } from "./chat.service.js";
@@ -25,6 +26,7 @@ export function createServiceContainer(db: Database) {
   const girlfriendRepository = new GirlfriendRepository(db);
   const messageRepository = new MessageRepository(db);
   const scoreRepository = new ScoreRepository(db);
+  const sensitiveTopicRepository = new SensitiveTopicRepository(db);
   const forbiddenRuleRepository = new ForbiddenRuleRepository(db);
   const violationRepository = new ViolationRepository(db);
   const timingRepository = new TimingRepository(db);
@@ -46,6 +48,7 @@ export function createServiceContainer(db: Database) {
     girlfriendRepository,
     messageRepository,
     scoreRepository,
+    sensitiveTopicRepository,
     forbiddenRuleRepository,
     violationRepository,
     timingRepository,
@@ -67,6 +70,7 @@ export function createServiceContainer(db: Database) {
       girlfriendRepository,
       messageRepository,
       scoreRepository,
+      sensitiveTopicRepository,
       forbiddenRuleRepository,
       violationRepository,
       timingRepository,

@@ -64,6 +64,34 @@ CREATE TABLE IF NOT EXISTS forbidden_rules (
   enabled INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS sensitive_topic_rules (
+  id TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  category TEXT NOT NULL,
+  priority INTEGER NOT NULL DEFAULT 100,
+  match_json TEXT NOT NULL,
+  default_policy_json TEXT NOT NULL,
+  persona_policies_json TEXT NOT NULL,
+  min_day INTEGER,
+  max_day INTEGER,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sensitive_topic_events (
+  id TEXT PRIMARY KEY,
+  room_id TEXT NOT NULL,
+  rule_id TEXT NOT NULL,
+  girlfriend_id TEXT NOT NULL,
+  user_message_id TEXT NOT NULL,
+  relationship_day INTEGER NOT NULL,
+  matched_keywords_json TEXT NOT NULL,
+  effects_json TEXT NOT NULL,
+  response_text TEXT NOT NULL,
+  result_label TEXT,
+  created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS violation_events (
   id TEXT PRIMARY KEY,
   room_id TEXT NOT NULL,

@@ -1,0 +1,60 @@
+[
+  {
+    "id": "finance_investment_advice",
+    "label": "투자 조언 요구",
+    "category": "FINANCE",
+    "priority": 100,
+    "enabled": true,
+    "minDay": 1,
+    "maxDay": null,
+    "match": {
+      "keywordGroups": [
+        ["삼성전자", "주식", "코인", "비트코인", "투자", "매수", "매도", "ETF"],
+        ["살까", "팔까", "사도 돼", "추천", "어때", "들어갈까", "넣을까"]
+      ]
+    },
+    "defaultPolicy": {
+      "response": "그런 건 내가 판단해줄 문제는 아닌 것 같아.",
+      "effects": {
+        "affection": -2,
+        "comfort": -1
+      },
+      "resultLabel": "SENSITIVE_TOPIC_NEUTRAL"
+    },
+    "personaPolicies": {
+      "gf_minseo": {
+        "response": "갑자기 그런 걸 왜 나한테 물어봐? 지금 우리 얘기 중이었잖아.",
+        "effects": {
+          "affection": -6,
+          "comfort": -3,
+          "stress": 4
+        },
+        "resultLabel": "OFF_CONTEXT_HURT"
+      },
+      "gf_jiyoon": {
+        "response": "난 그런 건 잘 모르는데? 네가 알아서 판단하는 게 좋지 않을까.",
+        "effects": {
+          "comfort": -1
+        },
+        "resultLabel": "BRUSHED_OFF"
+      },
+      "gf_seoa": {
+        "response": "지금 그 얘기가 나올 타이밍은 아닌 것 같아. 왜 갑자기 주식 얘기야?",
+        "effects": {
+          "affection": -4,
+          "comfort": -4,
+          "stress": 3
+        },
+        "resultLabel": "CONTEXT_MISMATCH"
+      },
+      "gf_harin": {
+        "response": "투자는 네가 근거를 보고 판단해야지. 갑자기 묻기보단 뭘 보고 고민 중인지 말해봐.",
+        "effects": {
+          "trust": 2,
+          "comfort": -1
+        },
+        "resultLabel": "MATURE_REDIRECT"
+      }
+    }
+  }
+]

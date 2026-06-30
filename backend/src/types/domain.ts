@@ -14,6 +14,7 @@ export type MessageType =
   | "NORMAL"
   | "EVENT_OPENING"
   | "EVENT_REPLY"
+  | "SENSITIVE_TOPIC_REPLY"
   | "BREAKUP"
   | "GIRLFRIEND_LEFT"
   | "DAY_END"
@@ -119,6 +120,33 @@ export interface ForbiddenRuleConfig {
   maxDay?: number | null;
   activeEventId?: string | null;
   enabled?: boolean;
+}
+
+export interface SensitiveTopicPolicy {
+  response: string;
+  effects: ScoreEffects;
+  resultLabel?: string;
+}
+
+export interface SensitiveTopicRuleConfig {
+  id: string;
+  label: string;
+  category: string;
+  priority: number;
+  enabled?: boolean;
+  minDay?: number | null;
+  maxDay?: number | null;
+  match: {
+    keywordGroups: string[][];
+  };
+  defaultPolicy: SensitiveTopicPolicy;
+  personaPolicies: Record<string, SensitiveTopicPolicy>;
+}
+
+export interface SensitiveTopicMatch {
+  rule: SensitiveTopicRuleConfig;
+  policy: SensitiveTopicPolicy;
+  matchedKeywords: string[];
 }
 
 export interface EventTriggerConfig {

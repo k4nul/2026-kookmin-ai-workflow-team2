@@ -97,3 +97,21 @@ curl -X POST http://localhost:8081/api/rooms/{roomId}/unlock/payment-complete
 ```
 
 Both clear cooldown and reset `violationScore` to 0. No real payment integration exists.
+
+## Sensitive Topics
+
+Sensitive or off-context topics are deterministic backend rules, not LLM decisions. Rules live in `src/config/sensitive-topics.json` and are seeded into SQLite on startup.
+
+Each rule supports:
+
+- `match.keywordGroups`: every group must match at least one keyword.
+- `defaultPolicy`: fallback response and score effects.
+- `personaPolicies`: girlfriend-specific response and score effects.
+
+Example covered by the default seed:
+
+```text
+삼성전자 주식 살까?
+```
+
+This matches the finance investment advice rule. Different girlfriends react differently: one may be hurt by the sudden topic change, another may brush it off, and another may redirect the user toward making their own decision.

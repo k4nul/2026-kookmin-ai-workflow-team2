@@ -3,7 +3,12 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { Database as DatabaseType } from "better-sqlite3";
 import { env } from "../config/env.js";
-import type { EventTemplateConfig, ForbiddenRuleConfig, GirlfriendConfig } from "../types/domain.js";
+import type {
+  EventTemplateConfig,
+  ForbiddenRuleConfig,
+  GirlfriendConfig,
+  SensitiveTopicRuleConfig
+} from "../types/domain.js";
 import { nowIso } from "../utils/time.js";
 
 let database: DatabaseType | null = null;
@@ -48,6 +53,7 @@ function seedDatabase(db: DatabaseType): void {
   const createdAt = nowIso();
   const girlfriends = readJson<GirlfriendConfig[]>("../config/girlfriends.json");
   const forbiddenRules = readJson<ForbiddenRuleConfig[]>("../config/forbidden-rules.json");
+  const sensitiveTopics = readJson<SensitiveTopicRuleConfig[]>("../config/sensitive-topics.json");
   const events = readJson<EventTemplateConfig[]>("../config/events.json");
 
   const insertGirlfriend = db.prepare(`
@@ -119,6 +125,27 @@ function seedDatabase(db: DatabaseType): void {
       enabled = excluded.enabled
   `);
 
+  const insertSensitiveTopic = db.prepare(`
+    INSERT INTO sensitive_topic_rules (
+      id, label, category, priority, match_json, default_policy_json,
+      persona_policies_json, min_day, max_day, enabled, created_at
+    )
+    VALUES (
+      @id, @label, @category, @priority, @matchJson, @defaultPolicyJson,
+      @personaPoliciesJson, @minDay, @maxDay, @enabled, @createdAt
+    )
+    ON CONFLICT(id) DO UPDATE SET
+      label = excluded.label,
+      category = excluded.category,
+      priority = excluded.priority,
+      match_json = excluded.match_json,
+      default_policy_json = excluded.default_policy_json,
+      persona_policies_json = excluded.persona_policies_json,
+      min_day = excluded.min_day,
+      max_day = excluded.max_day,
+      enabled = excluded.enabled
+  `);
+
   const transaction = db.transaction(() => {
     for (const girlfriend of girlfriends) {
       insertGirlfriend.run({
@@ -139,6 +166,22 @@ function seedDatabase(db: DatabaseType): void {
         maxDay: rule.maxDay ?? null,
         activeEventId: rule.activeEventId ?? null,
         enabled: rule.enabled === false ? 0 : 1
+      });
+    }
+
+    for (const topic of sensitiveTopics) {
+      insertSensitiveTopic.run({
+        id: topic.id,
+        label: topic.label,
+        category: topic.category,
+        priority: topic.priority,
+        matchJson: JSON.stringify(topic.match),
+        defaultPolicyJson: JSON.stringify(topic.defaultPolicy),
+        personaPoliciesJson: JSON.stringify(topic.personaPolicies),
+        minDay: topic.minDay ?? null,
+        maxDay: topic.maxDay ?? null,
+        enabled: topic.enabled === false ? 0 : 1,
+        createdAt
       });
     }
 
