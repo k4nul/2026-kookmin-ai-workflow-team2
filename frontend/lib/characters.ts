@@ -1,5 +1,6 @@
 export type Character = {
   id: string
+  backendGirlfriendId: string
   name: string
   tagline: string
   personality: string
@@ -19,6 +20,7 @@ export type Character = {
 export const characters: Character[] = [
   {
     id: "minji",
+    backendGirlfriendId: "gf_minseo",
     name: "민지",
     tagline: "Sweet & bubbly",
     personality: "다정하고 애교 많은 성격 · 이모지를 자주 써요",
@@ -31,6 +33,7 @@ export const characters: Character[] = [
   },
   {
     id: "dohyun",
+    backendGirlfriendId: "gf_jiyoon",
     name: "도현",
     tagline: "Tsundere",
     personality: "퉁명스럽지만 속은 다정한 츤데레",
@@ -43,6 +46,7 @@ export const characters: Character[] = [
   },
   {
     id: "seowoo",
+    backendGirlfriendId: "gf_seoa",
     name: "서우",
     tagline: "Mature & elegant",
     personality: "성숙하고 예의 바르며 차분한 성격",
@@ -55,6 +59,7 @@ export const characters: Character[] = [
   },
   {
     id: "hayoon",
+    backendGirlfriendId: "gf_harin",
     name: "하윤",
     tagline: "Chaotic & fun",
     personality: "엉뚱하고 에너지 넘치는 활기찬 성격",
@@ -66,42 +71,6 @@ export const characters: Character[] = [
     greeting: "야야야!! 드디어 왔다 ㅋㅋㅋ 우리 뭐하고 놀까?? 🎉🔥",
   },
 ]
-
-const replyPools: Record<string, string[]> = {
-  minji: [
-    "정말?? 너무 좋다 💕 더 얘기해줘~ 😊",
-    "헤헤 너랑 얘기하면 기분이 좋아져 🥰",
-    "보고 싶었어... 😳 오늘 뭐 했어?",
-    "우와 진짜?! 완전 멋지다 ✨ 자랑스러워!",
-    "있잖아, 다음엔 우리 같이 뭐 할까? 💗",
-  ],
-  dohyun: [
-    "흥, 그게 뭐 대단한 거라고. ...그래도 나쁘진 않네.",
-    "딱히 신경 쓴 건 아니지만... 밥은 먹었어?",
-    "너 진짜 가끔 보면 답이 없다니까. ...그래서 좋은 거지만.",
-    "...내 답장 기다린 거 아니거든? 우연히 본 거야.",
-    "쳇, 그런 거 말 안 해도 알아. 바보냐.",
-  ],
-  seowoo: [
-    "그렇군요. 차분히 들어보니 충분히 이해가 돼요.",
-    "당신의 이야기를 듣는 시간이 참 편안하네요.",
-    "무리하지 말고 천천히 해도 괜찮아요. 제가 옆에 있을게요.",
-    "오늘 하루도 수고 많으셨어요. 스스로를 잘 챙기셨나요?",
-    "흥미로운 생각이에요. 조금 더 들려주시겠어요?",
-  ],
-  hayoon: [
-    "ㅋㅋㅋㅋ 대박!! 그거 완전 내 스타일 🤣🔥",
-    "야 우리 지금 당장 뭐라도 저질러보자!! 😎",
-    "헐 진짜?? 나 방금 소름 돋았잖아 ㅋㅋㅋㅋ",
-    "에너지 넘치네 좋아좋아!! 가보자고~ 🎉",
-    "심심한데 너랑 얘기하니까 개꿀잼이다 ㅋㅋ 👍",
-  ],
-}
-
-export function getReply(characterId: string, turn: number): string {
-  const pool = replyPools[characterId] ?? ["..."]
-  return pool[turn % pool.length]
-}
 
 /** message count -> human friendly timeline phase label */
 export function getTimelinePhase(messageCount: number): string {

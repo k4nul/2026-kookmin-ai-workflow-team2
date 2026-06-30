@@ -49,6 +49,7 @@ const openingScenes: Scene[] = [
 ]
 
 export function IntroScreen({ onStart }: Props) {
+  const [started, setStarted] = useState(false)
   const [sceneIndex, setSceneIndex] = useState(0)
   const [typedLength, setTypedLength] = useState(0)
   const [exiting, setExiting] = useState(false)
@@ -82,11 +83,13 @@ export function IntroScreen({ onStart }: Props) {
   }, [finishOpening, isLastScene, scene.text.length, visibleTextLength])
 
   useEffect(() => {
+    if (!started) return
+
     setTypedLength(prefersReducedMotion ? scene.text.length : 0)
-  }, [prefersReducedMotion, scene.text.length, sceneIndex])
+  }, [prefersReducedMotion, scene.text.length, sceneIndex, started])
 
   useEffect(() => {
-    if (prefersReducedMotion || typedLength >= scene.text.length) {
+    if (!started || prefersReducedMotion || typedLength >= scene.text.length) {
       return undefined
     }
 
@@ -95,14 +98,18 @@ export function IntroScreen({ onStart }: Props) {
     }, 36)
 
     return () => window.clearTimeout(timeoutId)
-  }, [prefersReducedMotion, scene.text.length, typedLength])
+  }, [prefersReducedMotion, scene.text.length, started, typedLength])
 
   useEffect(() => {
+    if (!started) return undefined
+
     const timeoutId = window.setTimeout(advance, scene.durationMs)
     return () => window.clearTimeout(timeoutId)
-  }, [advance, scene.durationMs])
+  }, [advance, scene.durationMs, started])
 
   useEffect(() => {
+    if (!started) return undefined
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         finishOpening()
@@ -120,7 +127,32 @@ export function IntroScreen({ onStart }: Props) {
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [advance, finishOpening])
+  }, [advance, finishOpening, started])
+
+  if (!started) {
+    return (
+      <section
+        aria-label="게임 시작 화면"
+        className="relative min-h-dvh w-full overflow-hidden bg-background"
+      >
+        <button
+          type="button"
+          onClick={() => setStarted(true)}
+          aria-label="오프닝 시작"
+          className="group absolute inset-0 cursor-pointer bg-transparent focus-visible:outline-4 focus-visible:-outline-offset-8 focus-visible:outline-primary"
+        >
+          <Image
+            src="/backgrounds/intro.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-[1.02] motion-reduce:transition-none"
+          />
+        </button>
+      </section>
+    )
+  }
 
   return (
     <section
@@ -139,7 +171,7 @@ export function IntroScreen({ onStart }: Props) {
               ? "오프닝 종료"
               : "다음 장면 보기"
         }
-        className="absolute inset-0 z-10 cursor-pointer bg-transparent focus-visible:outline-4 focus-visible:-outline-offset-8 focus-visible:outline-primary"
+        className="absolute inset-0 z-30 cursor-pointer bg-transparent focus-visible:outline-4 focus-visible:-outline-offset-8 focus-visible:outline-primary"
       />
       <Image
         src={scene.image}
@@ -161,7 +193,7 @@ export function IntroScreen({ onStart }: Props) {
       >
         스킵하기
       </button>
-      <div className="absolute inset-x-4 bottom-6 z-30 mx-auto max-w-3xl rounded-3xl border border-card/60 bg-card/90 px-5 pb-5 pt-8 shadow-2xl backdrop-blur-md md:bottom-10 md:px-8 md:pb-7 md:pt-10">
+      <div className="pointer-events-none absolute inset-x-4 bottom-6 z-30 mx-auto max-w-3xl rounded-3xl border border-card/60 bg-card/90 px-5 pb-5 pt-8 shadow-2xl backdrop-blur-md md:bottom-10 md:px-8 md:pb-7 md:pt-10">
         <div className="absolute -top-5 left-5 rounded-full bg-primary px-5 py-2 text-sm font-black text-primary-foreground shadow-lg md:left-8">
           {scene.speaker}
         </div>

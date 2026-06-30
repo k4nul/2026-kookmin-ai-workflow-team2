@@ -14,6 +14,9 @@ type Props = {
   messages: Message[]
   timeMode: TimeMode
   virtualTime: Date
+  isConnecting: boolean
+  isSending: boolean
+  connectionError?: string
   onBack: () => void
   onSend: (text: string) => void
 }
@@ -23,28 +26,28 @@ export function ChatRoom({
   messages,
   timeMode,
   virtualTime,
+  isConnecting,
+  isSending,
+  connectionError,
   onBack,
   onSend,
 }: Props) {
   const [draft, setDraft] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
   const composingRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const isBusy = isConnecting || isSending
 
   const phase = getTimelinePhase(messages.length)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
-  }, [messages, isTyping])
+  }, [messages, isSending])
 
   function handleSend() {
     const text = draft.trim()
-    if (!text || isTyping) return
+    if (!text || isBusy) return
     setDraft("")
     onSend(text)
-    setIsTyping(true)
-    // hide the typing indicator shortly after the AI reply is appended
-    window.setTimeout(() => setIsTyping(false), 650)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -102,6 +105,11 @@ export function ChatRoom({
           {timeMode === "demo" ? "데모 시간" : "실제 시간"} · {formatVirtual(virtualTime)}
         </span>
       </div>
+      {connectionError && (
+        <div className="border-b border-destructive/20 bg-destructive/10 px-3 py-1.5 text-center text-[11px] font-medium text-destructive">
+          {connectionError}
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
@@ -117,7 +125,7 @@ export function ChatRoom({
           {messages.map((m) => (
             <MessageBubble key={m.id} message={m} character={character} />
           ))}
-          {isTyping && <TypingBubble character={character} />}
+          {isSending && <TypingBubble character={character} />}
         </div>
       </div>
 
@@ -130,14 +138,15 @@ export function ChatRoom({
             onKeyDown={handleKeyDown}
             onCompositionStart={() => (composingRef.current = true)}
             onCompositionEnd={() => (composingRef.current = false)}
-            placeholder={`${character.name}에게 메시지 보내기...`}
+            disabled={isConnecting}
+            placeholder={isConnecting ? "채팅방 연결 중..." : `${character.name}에게 메시지 보내기...`}
             aria-label="메시지 입력"
             className="h-11 flex-1 rounded-full border border-border bg-background px-4 text-sm text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
           />
           <button
             type="button"
             onClick={handleSend}
-            disabled={!draft.trim() || isTyping}
+            disabled={!draft.trim() || isBusy}
             aria-label="전송"
             className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all hover:opacity-90 disabled:opacity-40"
           >
@@ -150,6 +159,16 @@ export function ChatRoom({
 }
 
 function MessageBubble({ message, character }: { message: Message; character: Character }) {
+  if (message.sender === "system") {
+    return (
+      <div className="flex justify-center">
+        <div className="max-w-[82%] rounded-full bg-background/80 px-3 py-1.5 text-center text-[11px] font-medium text-muted-foreground shadow-sm">
+          {message.text}
+        </div>
+      </div>
+    )
+  }
+
   const isUser = message.sender === "user"
   return (
     <div className={cn("flex items-end gap-2", isUser ? "justify-end" : "justify-start")}>
