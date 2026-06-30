@@ -1,12 +1,12 @@
 # LLM Gateway
 
-LLM Gateway is the internal LLM-only HTTP service for the love-training game. The Game Backend calls this server on port `8080`; this server wraps Ollama on `http://localhost:11434` and uses the `llama3.2` model by default.
+LLM Gateway is the internal LLM-only HTTP service for the love-training game. The Game Backend calls this server on port `8080`; this server wraps Ollama on `http://localhost:11434` by default and can temporarily route generation through Codex CLI when local Ollama is unavailable.
 
 ## Purpose
 
 This service handles:
 
-- Ollama connectivity and model status
+- LLM provider connectivity and model status
 - Chat text generation
 - Intent classification helper output
 - Daily relationship coaching feedback wording
@@ -24,14 +24,27 @@ The browser client must call the Game Backend. The Game Backend calls this LLM G
 ## Requirements
 
 - Node.js
-- Ollama running locally
-- Ollama model: `llama3.2`
+- Ollama running locally, or Codex CLI authenticated locally
+- Ollama model: `llama3.2` when `LLM_PROVIDER=ollama`
 
 Install the model if needed:
 
 ```bash
 ollama pull llama3.2
 ```
+
+To use Codex CLI temporarily instead of Ollama:
+
+```bash
+LLM_PROVIDER=codex-cli
+CODEX_CLI_COMMAND=codex
+CODEX_CLI_BASE_ARGS=
+CODEX_CLI_MODEL=
+CODEX_CLI_WORKDIR=
+CODEX_CLI_TIMEOUT_MS=60000
+```
+
+`CODEX_CLI_MODEL` can stay empty to use the CLI default model. `CODEX_CLI_WORKDIR` can stay empty to run Codex from the OS temp directory instead of loading repository context. If `codex` is not directly executable on Windows, point `CODEX_CLI_COMMAND` to a working wrapper or executable. For example, `CODEX_CLI_COMMAND=npx.cmd` with `CODEX_CLI_BASE_ARGS=["-y","@openai/codex"]` runs Codex through `npx`.
 
 ## Environment
 
@@ -40,9 +53,15 @@ Copy `.env.example` to `.env` for local overrides.
 ```bash
 PORT=8080
 INTERNAL_API_KEY=dev-internal-key
+LLM_PROVIDER=ollama
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2
 OLLAMA_KEEP_ALIVE=30m
+CODEX_CLI_COMMAND=codex
+CODEX_CLI_BASE_ARGS=
+CODEX_CLI_MODEL=
+CODEX_CLI_WORKDIR=
+CODEX_CLI_TIMEOUT_MS=60000
 LLM_TIMEOUT_MS=30000
 LLM_MAX_INPUT_CHARS=12000
 LLM_MAX_OUTPUT_CHARS=800
@@ -99,7 +118,7 @@ GET http://localhost:8080/v1/model/status
 X-Internal-Api-Key: dev-internal-key
 ```
 
-Checks Ollama tags, running models, and version.
+Checks the configured provider. For Ollama, it checks tags, running models, and version. For Codex CLI, it checks whether the command can execute.
 
 ### Chat Generation
 
@@ -130,7 +149,7 @@ Content-Type: application/json
 }
 ```
 
-If Ollama is unavailable or times out, this endpoint returns HTTP `200` with deterministic fallback content.
+If the configured LLM provider is unavailable or times out, this endpoint returns HTTP `200` with deterministic fallback content.
 
 ### Intent Classification
 
