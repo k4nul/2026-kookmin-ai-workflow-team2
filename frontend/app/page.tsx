@@ -4,7 +4,13 @@ import { useState } from "react"
 import { IntroScreen } from "@/components/intro-screen"
 import { CharacterSelection } from "@/components/character-selection"
 import { GameLobby } from "@/components/game-lobby"
-import { getReply, type Character } from "@/lib/characters"
+import type { Character } from "@/lib/characters"
+import {
+  createBackendRoom,
+  sendBackendMessage,
+  type BackendChatMode,
+  type BackendMessage,
+} from "@/lib/backend-api"
 import { demoJumpMinutes } from "@/lib/time"
 
 export type TimeMode = "demo" | "real"
@@ -12,16 +18,21 @@ export type Screen = "selection" | "chat"
 
 export type Message = {
   id: string
-  sender: "user" | "ai"
+  sender: "user" | "ai" | "system"
   text: string
   /** epoch ms */
   timestamp: number
 }
 
 type ChatState = {
+  roomId?: string
+  mode: BackendChatMode
   messages: Message[]
   /** the current virtual clock for this character */
   virtualTime: number
+  isConnecting: boolean
+  isSending: boolean
+  error?: string
 }
 
 function makeId() {
@@ -36,15 +47,25 @@ export default function Page() {
   const [chats, setChats] = useState<Record<string, ChatState>>({})
 
   function handleSelect(character: Character) {
+    const mode = toBackendMode(timeMode)
+    const existing = chats[character.id]
+
     setSelectedCharacter(character)
     setCurrentScreen("chat")
+
+    if (existing?.mode === mode && (existing.roomId || existing.isConnecting)) {
+      return
+    }
+
     setChats((prev) => {
-      if (prev[character.id]) return prev
       const now = Date.now()
       return {
         ...prev,
         [character.id]: {
+          mode,
           virtualTime: now,
+          isConnecting: true,
+          isSending: false,
           messages: [
             {
               id: makeId(),
@@ -56,44 +77,163 @@ export default function Page() {
         },
       }
     })
+
+    void createRoomForCharacter(character, mode)
   }
 
-  function handleSend(text: string) {
+  async function createRoomForCharacter(character: Character, mode: BackendChatMode) {
+    try {
+      const room = await createBackendRoom({
+        girlfriendId: character.backendGirlfriendId,
+        mode,
+      })
+
+      setChats((prev) => {
+        const state = prev[character.id]
+        if (!state || state.mode !== mode) return prev
+
+        return {
+          ...prev,
+          [character.id]: {
+            ...state,
+            roomId: room.roomId,
+            isConnecting: false,
+            error: undefined,
+          },
+        }
+      })
+    } catch (error) {
+      setChats((prev) => {
+        const state = prev[character.id]
+        if (!state || state.mode !== mode) return prev
+
+        return {
+          ...prev,
+          [character.id]: {
+            ...state,
+            isConnecting: false,
+            error: getErrorMessage(error),
+          },
+        }
+      })
+    }
+  }
+
+  async function handleSend(text: string) {
     if (!selectedCharacter) return
     const id = selectedCharacter.id
+    const state = chats[id]
+
+    if (!state?.roomId || state.isConnecting || state.isSending) {
+      setChats((prev) => {
+        const current = prev[id]
+        if (!current) return prev
+        return {
+          ...prev,
+          [id]: {
+            ...current,
+            error: current.isConnecting ? "채팅방을 연결하는 중입니다." : "채팅방 연결이 필요합니다.",
+          },
+        }
+      })
+      return
+    }
+
+    const userTime = state.mode === "FAST" ? state.virtualTime : Date.now()
+    const replyStartTime = state.mode === "FAST" ? userTime + demoJumpMinutes() * 60_000 : Date.now()
+    const userMsg: Message = {
+      id: makeId(),
+      sender: "user",
+      text,
+      timestamp: userTime,
+    }
 
     setChats((prev) => {
-      const state = prev[id] ?? { messages: [], virtualTime: Date.now() }
-
-      // 1) user message uses the current virtual time (demo) or real clock (real)
-      const userTime = timeMode === "demo" ? state.virtualTime : Date.now()
-      const userMsg: Message = {
-        id: makeId(),
-        sender: "user",
-        text,
-        timestamp: userTime,
-      }
-
-      // 2) compute the AI reply time
-      const aiTime =
-        timeMode === "demo" ? userTime + demoJumpMinutes() * 60_000 : Date.now()
-
-      const turn = state.messages.filter((m) => m.sender === "user").length
-      const aiMsg: Message = {
-        id: makeId(),
-        sender: "ai",
-        text: getReply(id, turn),
-        timestamp: aiTime,
-      }
+      const current = prev[id]
+      if (!current) return prev
 
       return {
         ...prev,
         [id]: {
-          virtualTime: timeMode === "demo" ? aiTime : Date.now(),
-          messages: [...state.messages, userMsg, aiMsg],
+          ...current,
+          virtualTime: userTime,
+          isSending: true,
+          error: undefined,
+          messages: [...current.messages, userMsg],
         },
       }
     })
+
+    try {
+      const result = await sendBackendMessage({
+        roomId: state.roomId,
+        content: text,
+        mode: state.mode,
+      })
+      const responseMessages = (result.messages ?? []).map((message, index) =>
+        fromBackendMessage(message, state.mode === "FAST" ? replyStartTime + index * 60_000 : undefined),
+      )
+      const pendingMessage =
+        responseMessages.length === 0 && result.dueAt
+          ? [
+              {
+                id: makeId(),
+                sender: "system" as const,
+                text: "답장을 기다리는 중이에요.",
+                timestamp: Date.now(),
+              },
+            ]
+          : []
+      const nextMessages = [...responseMessages, ...pendingMessage]
+
+      setChats((prev) => {
+        const current = prev[id]
+        if (!current) return prev
+
+        const lastMessage = nextMessages.length > 0 ? nextMessages[nextMessages.length - 1] : null
+
+        return {
+          ...prev,
+          [id]: {
+            ...current,
+            virtualTime: state.mode === "FAST" ? lastMessage?.timestamp ?? replyStartTime : Date.now(),
+            isSending: false,
+            messages: [...current.messages, ...nextMessages],
+          },
+        }
+      })
+    } catch (error) {
+      setChats((prev) => {
+        const current = prev[id]
+        if (!current) return prev
+
+        return {
+          ...prev,
+          [id]: {
+            ...current,
+            isSending: false,
+            error: getErrorMessage(error),
+          },
+        }
+      })
+    }
+  }
+
+  function fromBackendMessage(message: BackendMessage, timestamp?: number): Message {
+    return {
+      id: message.id,
+      sender: message.sender === "USER" ? "user" : message.sender === "SYSTEM" ? "system" : "ai",
+      text: message.content,
+      timestamp: timestamp ?? new Date(message.createdAt).getTime(),
+    }
+  }
+
+  function toBackendMode(mode: TimeMode): BackendChatMode {
+    return mode === "demo" ? "FAST" : "REALTIME"
+  }
+
+  function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "요청에 실패했습니다."
   }
 
   function handleBack() {
@@ -118,6 +258,9 @@ export default function Page() {
           messages={state?.messages ?? []}
           timeMode={timeMode}
           virtualTime={new Date(state?.virtualTime ?? Date.now())}
+          isConnecting={state?.isConnecting ?? false}
+          isSending={state?.isSending ?? false}
+          connectionError={state?.error}
           onBack={handleBack}
           onSend={handleSend}
         />
