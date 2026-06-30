@@ -58,9 +58,15 @@ export function GameLobby({
       </header>
 
       {/* Main area */}
-      <main className="relative z-10 flex flex-1 items-stretch justify-center gap-4 px-3 pb-3 md:px-6">
-        {/* CENTER — phone frame */}
-        <div className="flex w-full max-w-sm items-center justify-center">
+      <main className="relative z-10 flex flex-1 items-center justify-center overflow-hidden px-3 py-3 lg:gap-4 lg:px-6">
+        {/* Phone: height = min(available vertical space, width×19/9) — always fits screen */}
+        <div
+          className="relative shrink-0"
+          style={{
+            height: "min(calc(100svh - 9rem), calc(100vw * 19 / 9))",
+            aspectRatio: "9 / 19",
+          }}
+        >
           <PhoneFrame>
             <ChatRoom
               character={character}
@@ -101,13 +107,14 @@ export function GameLobby({
 
 function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative w-full">
+    <div className="relative h-full w-full">
+      {/* glow */}
       <div className="absolute -inset-2 rounded-[2.75rem] bg-gradient-to-b from-primary/30 to-fuchsia-400/20 blur-xl" />
-      <div className="relative aspect-[9/19] w-full overflow-hidden rounded-[2.5rem] border-[6px] border-foreground/85 bg-foreground/90 shadow-2xl">
+      <div className="relative h-full w-full overflow-hidden rounded-[2.5rem] border-[6px] border-foreground/85 bg-foreground/90 shadow-2xl">
         {/* notch */}
         <div className="absolute left-1/2 top-0 z-20 h-5 w-28 -translate-x-1/2 rounded-b-2xl bg-foreground/85" />
-        {/* screen */}
-        <div className="absolute inset-0 overflow-hidden rounded-[2rem] bg-background">
+        {/* screen — pt-5 pushes content below the notch */}
+        <div className="absolute inset-0 overflow-hidden rounded-[2rem] bg-background pt-5">
           {children}
         </div>
       </div>
