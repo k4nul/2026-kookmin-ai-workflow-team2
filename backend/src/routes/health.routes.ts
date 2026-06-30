@@ -12,6 +12,7 @@ export function healthRoutes(): Router {
       port: env.PORT,
       llmGateway: {
         baseUrl: env.LLM_GATEWAY_BASE_URL,
+        model: env.LLM_GATEWAY_MODEL,
         reachable
       }
     });

@@ -30,11 +30,12 @@ Copy `.env.example` to `.env` if local overrides are needed.
 Required LLM Gateway setting:
 
 ```env
-LLM_GATEWAY_BASE_URL=http://localhost:8080
+LLM_GATEWAY_BASE_URL=http://localhost:8082
 LLM_GATEWAY_API_KEY=dev-internal-key
+LLM_GATEWAY_MODEL=gpt5.3-spark
 ```
 
-The backend never calls Ollama directly. All model generation, intent classification, and optional daily feedback calls go through the LLM Gateway.
+The backend never calls the model provider directly. All model generation, intent classification, and optional daily feedback calls go through the LLM Gateway.
 
 ## API Examples
 

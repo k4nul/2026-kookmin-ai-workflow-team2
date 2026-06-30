@@ -36,7 +36,7 @@ export class LlmClientService {
     try {
       const response = await this.postJson("/v1/chat/generate", {
         requestId: newId("llm"),
-        model: "llama3.2",
+        model: env.LLM_GATEWAY_MODEL,
         messages: input.messages,
         options: {
           temperature: 0.75,
@@ -69,7 +69,7 @@ export class LlmClientService {
     try {
       const response = await this.postJson("/v1/classify/intent", {
         requestId: newId("intent"),
-        model: "llama3.2",
+        model: env.LLM_GATEWAY_MODEL,
         context: {
           eventId: input.eventId,
           girlfriendMessage: input.girlfriendMessage,
@@ -92,6 +92,7 @@ export class LlmClientService {
     try {
       const response = await this.postJson("/v1/feedback/daily", {
         requestId: newId("feedback"),
+        model: env.LLM_GATEWAY_MODEL,
         roomId: input.roomId,
         messages: input.messages.map((message) => ({
           sender: message.sender,
