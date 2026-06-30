@@ -1,12 +1,12 @@
 # LLM Gateway
 
-LLM Gateway is the internal LLM-only HTTP service for the love-training game. The Game Backend calls this server on port `8080`; this server wraps Ollama on `http://localhost:11434` and uses the `llama3.2` model by default.
+LLM Gateway is the internal LLM-only HTTP service for the love-training game. The Game Backend calls this server on port `8082`; this server uses the Codex CLI provider with `gpt5.3-spark` by default, and can still use Ollama when `LLM_PROVIDER=ollama`.
 
 ## Purpose
 
 This service handles:
 
-- Ollama connectivity and model status
+- LLM provider connectivity and model status
 - Chat text generation
 - Intent classification helper output
 - Daily relationship coaching feedback wording
@@ -24,10 +24,12 @@ The browser client must call the Game Backend. The Game Backend calls this LLM G
 ## Requirements
 
 - Node.js
-- Ollama running locally
-- Ollama model: `llama3.2`
+- Codex CLI available on `PATH`
+- Default Codex model: `gpt5.3-spark`
 
-Install the model if needed:
+For the legacy Ollama provider, set `LLM_PROVIDER=ollama` and run Ollama locally.
+
+For Ollama, install the model if needed:
 
 ```bash
 ollama pull llama3.2
@@ -38,10 +40,12 @@ ollama pull llama3.2
 Copy `.env.example` to `.env` for local overrides.
 
 ```bash
-PORT=8080
+PORT=8082
 INTERNAL_API_KEY=dev-internal-key
+LLM_PROVIDER=codex
+LLM_MODEL=gpt5.3-spark
+CODEX_COMMAND=codex
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.2
 OLLAMA_KEEP_ALIVE=30m
 LLM_TIMEOUT_MS=30000
 LLM_MAX_INPUT_CHARS=12000
@@ -72,22 +76,22 @@ X-Internal-Api-Key: dev-internal-key
 ### Health
 
 ```http
-GET http://localhost:8080/health
+GET http://localhost:8082/health
 ```
 
-Returns service status even if Ollama is down.
+Returns service status even if the configured provider is unavailable.
 
 ### Model Preload
 
 ```http
-POST http://localhost:8080/v1/model/preload
+POST http://localhost:8082/v1/model/preload
 X-Internal-Api-Key: dev-internal-key
 Content-Type: application/json
 ```
 
 ```json
 {
-  "model": "llama3.2",
+  "model": "gpt5.3-spark",
   "keepAlive": "30m"
 }
 ```
@@ -95,16 +99,16 @@ Content-Type: application/json
 ### Model Status
 
 ```http
-GET http://localhost:8080/v1/model/status
+GET http://localhost:8082/v1/model/status
 X-Internal-Api-Key: dev-internal-key
 ```
 
-Checks Ollama tags, running models, and version.
+Checks the configured provider status.
 
 ### Chat Generation
 
 ```http
-POST http://localhost:8080/v1/chat/generate
+POST http://localhost:8082/v1/chat/generate
 X-Internal-Api-Key: dev-internal-key
 Content-Type: application/json
 ```
@@ -112,7 +116,7 @@ Content-Type: application/json
 ```json
 {
   "requestId": "req_test_001",
-  "model": "llama3.2",
+  "model": "gpt5.3-spark",
   "messages": [
     {
       "role": "system",
@@ -130,12 +134,12 @@ Content-Type: application/json
 }
 ```
 
-If Ollama is unavailable or times out, this endpoint returns HTTP `200` with deterministic fallback content.
+If the configured provider is unavailable or times out, this endpoint returns HTTP `200` with deterministic fallback content.
 
 ### Intent Classification
 
 ```http
-POST http://localhost:8080/v1/classify/intent
+POST http://localhost:8082/v1/classify/intent
 X-Internal-Api-Key: dev-internal-key
 Content-Type: application/json
 ```
@@ -155,7 +159,7 @@ Expected supportive replies classify as `SUPPORTIVE`. If parsing or model execut
 ### Daily Feedback
 
 ```http
-POST http://localhost:8080/v1/feedback/daily
+POST http://localhost:8082/v1/feedback/daily
 X-Internal-Api-Key: dev-internal-key
 Content-Type: application/json
 ```

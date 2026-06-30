@@ -5,7 +5,7 @@ import {
   sanitizeLlmOutput
 } from "../services/response-filter.service.js";
 import { getGirlfriendFallbackReply } from "../services/fallback.service.js";
-import { callOllamaChat } from "../services/ollama.service.js";
+import { callLlmChat } from "../services/llm.service.js";
 import { chatGenerateRequestSchema } from "../services/schema.service.js";
 import { ensureRequestId } from "../utils/request-id.js";
 import { elapsedMs, nowMs } from "../utils/timer.js";
@@ -23,11 +23,11 @@ export const chatRouter = Router();
 chatRouter.post("/generate", async (req, res) => {
   const request = chatGenerateRequestSchema.parse(req.body);
   const requestId = ensureRequestId(request.requestId);
-  const model = request.model ?? env.OLLAMA_MODEL;
+  const model = request.model ?? env.LLM_MODEL;
   const startedAt = nowMs();
 
   try {
-    const ollamaResponse = await callOllamaChat({
+    const llmResponse = await callLlmChat({
       model,
       messages: request.messages,
       options: {
@@ -35,7 +35,7 @@ chatRouter.post("/generate", async (req, res) => {
         ...request.options
       }
     });
-    const content = sanitizeLlmOutput(ollamaResponse.message?.content ?? "");
+    const content = sanitizeLlmOutput(llmResponse.content);
     const shouldFallback = !content || containsInternalLeak(content);
     const latencyMs = elapsedMs(startedAt);
 
@@ -60,10 +60,7 @@ chatRouter.post("/generate", async (req, res) => {
       ok: true,
       content,
       model,
-      usage: {
-        prompt_eval_count: ollamaResponse.prompt_eval_count,
-        eval_count: ollamaResponse.eval_count
-      },
+      usage: llmResponse.usage,
       latencyMs,
       fallback: false
     });
