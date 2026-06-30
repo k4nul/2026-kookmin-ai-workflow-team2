@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+backend/data/*.sqlite
+backend/data/*.sqlite-*
+coverage/
+.vscode/
+
+# AI agent instructions and prompts
+AGENTS.md
+AGETNS.md
+*.instructions.json
+*.codex.json
