@@ -11,6 +11,9 @@ type Props = {
   messages: Message[]
   timeMode: TimeMode
   virtualTime: Date
+  isConnecting: boolean
+  isSending: boolean
+  connectionError?: string
   onBack: () => void
   onSend: (text: string) => void
 }
@@ -20,6 +23,9 @@ export function GameLobby({
   messages,
   timeMode,
   virtualTime,
+  isConnecting,
+  isSending,
+  connectionError,
   onBack,
   onSend,
 }: Props) {
@@ -77,6 +83,9 @@ export function GameLobby({
               messages={messages}
               timeMode={timeMode}
               virtualTime={virtualTime}
+              isConnecting={isConnecting}
+              isSending={isSending}
+              connectionError={connectionError}
               onBack={onBack}
               onSend={onSend}
             />
