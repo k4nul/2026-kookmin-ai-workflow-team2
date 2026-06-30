@@ -52,6 +52,22 @@ describe("schema.service", () => {
     ).toBe(true);
   });
 
+  it("passes transcript DailyFeedbackRequest from backend", () => {
+    expect(
+      dailyFeedbackRequestSchema.safeParse({
+        roomId: "room_001",
+        messages: [
+          {
+            sender: "USER",
+            content: "오늘 좀 힘들었어.",
+            type: "NORMAL",
+            createdAt: "2026-06-30T00:00:00.000Z"
+          }
+        ]
+      }).success
+    ).toBe(true);
+  });
+
   it("fails invalid DailyFeedbackRequest", () => {
     expect(
       dailyFeedbackRequestSchema.safeParse({

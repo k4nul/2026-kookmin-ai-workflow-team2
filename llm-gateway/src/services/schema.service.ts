@@ -57,9 +57,12 @@ export const intentClassifyRequestSchema = z.object({
   allowedIntents: z.array(z.string().min(1)).nonempty().optional()
 });
 
-export const dailyFeedbackRequestSchema = z.object({
+const dailyFeedbackBaseSchema = z.object({
   requestId: z.string().min(1).optional(),
-  model: z.string().min(1).optional(),
+  model: z.string().min(1).optional()
+});
+
+const dailyFeedbackSummaryRequestSchema = dailyFeedbackBaseSchema.extend({
   girlfriend: z.object({
     id: z.string().min(1),
     displayName: z.string().min(1),
@@ -74,6 +77,25 @@ export const dailyFeedbackRequestSchema = z.object({
     goodBehaviors: z.array(z.string()).optional()
   })
 });
+
+const dailyFeedbackTranscriptRequestSchema = dailyFeedbackBaseSchema.extend({
+  roomId: z.string().min(1),
+  messages: z
+    .array(
+      z.object({
+        sender: z.string().min(1),
+        content: z.string(),
+        type: z.string().optional(),
+        createdAt: z.string().optional()
+      })
+    )
+    .nonempty()
+});
+
+export const dailyFeedbackRequestSchema = z.union([
+  dailyFeedbackSummaryRequestSchema,
+  dailyFeedbackTranscriptRequestSchema
+]);
 
 export const modelPreloadRequestSchema = z.object({
   model: z.string().min(1).optional(),

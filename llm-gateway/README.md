@@ -183,3 +183,19 @@ Content-Type: application/json
 ```
 
 The output is concise Korean coaching feedback. It must not expose raw scores, hidden flags, server rules, or internal prompts.
+
+The Game Backend may also send transcript-based feedback input:
+
+```json
+{
+  "roomId": "room_001",
+  "messages": [
+    {
+      "sender": "USER",
+      "content": "오늘 좀 힘들었어.",
+      "type": "NORMAL",
+      "createdAt": "2026-06-30T00:00:00.000Z"
+    }
+  ]
+}
+```
