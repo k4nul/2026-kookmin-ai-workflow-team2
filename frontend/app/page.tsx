@@ -103,7 +103,7 @@ export default function Page() {
 
   if (isIntroScreen) {
     return (
-      <main className="animate-vn-fade-up">
+      <main>
         <IntroScreen onStart={() => setIsIntroScreen(false)} />
       </main>
     )
