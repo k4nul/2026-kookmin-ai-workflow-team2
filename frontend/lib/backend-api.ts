@@ -1,4 +1,4 @@
-const BACKEND_BASE_URL = (process.env.NEXT_PUBLIC_BACKEND_BASE_URL ?? "http://localhost:8081").replace(/\/$/, "")
+const BACKEND_BASE_URL = (process.env.NEXT_PUBLIC_BACKEND_BASE_URL ?? "/api/backend").replace(/\/$/, "")
 
 export type BackendChatMode = "FAST" | "REALTIME"
 
